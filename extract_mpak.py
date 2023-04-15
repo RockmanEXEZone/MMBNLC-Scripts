@@ -53,11 +53,11 @@ with open(args.map_file, 'rb') as map_f, open(args.mpak_file, 'rb') as mpak_f:
 		entry = read_from_stream(MapEntry, map_f)
 
 		mpak_f.seek(entry.mpak_addr)
-		file = mpak_f.read(entry.mpak_size)
+		data = mpak_f.read(entry.mpak_size)
 
 		id = f'{entry.rom_addr & 0xFFFFFF:6X}';
 		file = f'{id}.msg'
 		path = Path(args.out_folder, file)
 		print(f'Extracting {file}')
 		with open(path, 'wb') as msg_f:
-			msg_f.write(file)
+			msg_f.write(data)
