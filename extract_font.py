@@ -14,7 +14,7 @@
 #
 # Example:
 #     python extract_font eng_mojiFont.fnt eng_mojiFont
-#     Extracts eng_mojiFont.fnt to folder named eng_mofiFont
+#     Extracts eng_mojiFont.fnt to folder named eng_mojiFont
 
 from argparse import ArgumentParser
 from collections import Counter
@@ -97,7 +97,7 @@ with open(args.font_file, 'rb') as font_f:
 		buckets.append(read_from_stream(Bucket, font_f))
 
 	# Read glyph map
-	glyph_map = []
+	glyph_map: list[int] = []
 	for i in range(header.glyph_map_count):
 		m, = struct.unpack_from('<H', font_f.read(2))
 		glyph_map.append(m)
@@ -139,6 +139,10 @@ with open(args.font_file, 'rb') as font_f:
 		bmp_img = Image.frombytes('RGBA', (w, h), bmp_data, 'raw', 'BGRA')
 		bmp_imgs.append(bmp_img)
 		bmp_img.save(bmp_file)
+
+		#bmp_noalpha_file = Path(out_folder, f'bmp_{i}_noalpha.png')
+		#bmp_noalpha_img = bmp_img.convert('RGB')
+		#bmp_noalpha_img.save(bmp_noalpha_file)
 	
 	# Adjust glyphs
 	for i in range(header.glyph_count):
@@ -200,7 +204,8 @@ with open(args.font_file, 'rb') as font_f:
 			glyph_entry.img = glyph_img
 
 	# Dump by table if it exists
-	if len(font_f.peek(1)) != 0:
+	have_table = len(font_f.peek(1)) != 0
+	if have_table:
 		count_table, = struct.unpack_from('<I', font_f.read(4))
 		table: list[int] = []
 		tbl_file = Path(out_folder, 'table.tbl')
@@ -208,9 +213,9 @@ with open(args.font_file, 'rb') as font_f:
 			for i in range(count_table):
 				utf16, = struct.unpack_from('<2s', font_f.read(2))
 				table.append((utf16[0]) | (utf16[1] << 8))
-				char = 0x6400 + i
+				#char = 0x6400 + i
 				utf16 = utf16.decode('utf-16-le', 'backslashreplace')
-				tbl_f.write(f'{char:02X}={utf16}\n')
+				tbl_f.write(f'{i:X}={utf16}\n')
 		
 		# Dump table chars
 		tbl_dir = Path(out_folder, 'tbl')
@@ -226,41 +231,47 @@ with open(args.font_file, 'rb') as font_f:
 				continue
 			glyph_entry = glyphs[glyph_idx]
 
-			utf16 = struct.pack('<H', x).decode('utf-16-le', 'backslashreplace')
-			glyphs_json[glyph_idx]['chars'].append(utf16)
+			#utf16 = struct.pack('<H', x).decode('utf-16-le', 'backslashreplace')
+			#glyphs_json[glyph_idx]['chars'].append(utf16)
 			print(f'Dumping char {i:04X} = UTF16 {x:04X} = map {map_idx:04X} = glyph {glyph_idx:04X}')
 
 			bmp_file = Path(tbl_dir, f'tbl{i:04}_{i:04X}.png')
 			if glyph_entry.img is not None:
 				glyph_entry.img.save(bmp_file)
-	# Otherwise dump by UTF-16
-	else:
-		utf16_dir = Path(out_folder, 'utf16')
-		utf16_dir.mkdir(exist_ok=True)
-		for bucket_idx in range(0x100):
-			bucket = buckets[bucket_idx]
-			for i in range(bucket.char_count):
-				char = (bucket_idx << 8) | (bucket.char_offset + i)
-				
-				map_idx = bucket.map_idx + i
-				glyph_idx = glyph_map[map_idx]
-				if glyph_idx == header.placeholder_glyph:
-					continue
-				glyph_entry = glyphs[glyph_idx]
+	
+	# Also dump by UTF-16
+	utf16_dir = Path(out_folder, 'utf16')
+	utf16_dir.mkdir(exist_ok=True)
+	got_placeholder = False
+	for bucket_idx in range(0x100):
+		bucket = buckets[bucket_idx]
+		for i in range(bucket.char_count):
+			char = (bucket_idx << 8) | (bucket.char_offset + i)
+			
+			map_idx = bucket.map_idx + i
+			glyph_idx = glyph_map[map_idx]
+			glyph_entry = glyphs[glyph_idx]
 
-				utf16 = struct.pack('<H', char).decode('utf-16-le', 'backslashreplace')
-				glyphs_json[glyph_idx]['chars'].append(utf16)
-				print(f'Dumping UTF16 {char:04X} = map {map_idx:04X} = glyph {glyph_idx:04X}')
+			utf16 = struct.pack('<H', char).decode('utf-16-le', 'backslashreplace')
+			glyphs_json[glyph_idx]['chars'].append(utf16)
+			if glyph_idx == header.placeholder_glyph and got_placeholder:
+				continue
+			got_placeholder = True
+			print(f'Dumping UTF16 {char:04X} = map {map_idx:04X} = glyph {glyph_idx:04X}')
 
-				bmp_file = Path(utf16_dir, f'char{char:04}_{char:04X}.png')
-				if glyph_entry.img is not None:
-					glyph_entry.img.save(bmp_file)
+			bmp_file = Path(utf16_dir, f'char{char:04}_{char:04X}.png')
+			if glyph_entry.img is not None:
+				glyph_entry.img.save(bmp_file)
 
 	glyph_file = Path(out_folder, 'glyphs.json')
-	with open(glyph_file, 'w') as glyph_f:
+	with open(glyph_file, 'w', encoding='utf-8') as glyph_f:
 		json.dump(glyphs_json, glyph_f, indent=4)
 	
 	# Dump metadata
 	info_file = Path(out_folder, 'info.json')
-	with open(info_file, 'w') as info_f:
-		json.dump(dataclasses.asdict(header), info_f, indent=4)
+	with open(info_file, 'w', encoding='utf-8') as info_f:
+		header_json = dataclasses.asdict(header)
+		del header_json['magic']
+		del header_json['glyph_map_count']
+		del header_json['glyph_count']
+		json.dump(header_json, info_f, indent=4)
