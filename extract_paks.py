@@ -1,10 +1,10 @@
 # Extract textures from .pak files found in data/ui
 #
 # Usage:
-#    python extract_pak.py <pak_folder> <out_folder>
+#    python extract_paks.py <pak_folder> <out_folder>
 #
 # Example:
-#    python extract_pak.py exe1/data/ui exe1_out
+#    python extract_paks.py exe1/data/ui exe1_out
 #    Extracts textures from .pak files in exe1/data/ui to exe1_out as PNGs
 
 from argparse import ArgumentParser
