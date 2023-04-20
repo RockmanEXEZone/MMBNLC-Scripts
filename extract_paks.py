@@ -49,7 +49,11 @@ for pak_file in pak_files:
 		pak_f.seek(header.texture_offset)
 		width = header.textureWidth * header.textureSizeMultiplier
 		height = header.textureHeight * header.textureSizeMultiplier
-		texture_data = pak_f.read(width * height * 4)
+		texture_length = width * height * 4
+		texture_data = pak_f.read(texture_length)
+		if(len(texture_data) != texture_length):
+			print(f"\033[91mSkipping {pak_file}\033[0m")
+			continue
 		im2 = Image.frombytes('RGBA', (width, height), texture_data, "raw", "BGRA")
 		out_file_name = os.path.basename(pak_file).replace(".pak", ".png")
 		im2.save(f"{args.out_folder}/{out_file_name}")
