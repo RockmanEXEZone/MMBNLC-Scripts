@@ -45,27 +45,42 @@ adjust_names = args.adjust_names
 with open(args.dic_file, 'rb') as dic_f, open(args.srl_file, 'rb') as srl_f:
 	file_info_lookup = {}
 	total_size = 0
-	while struct.unpack('<I', dic_f.peek(4)[:4])[0] != 0:
+	contains_names = True
+	while True:
 		entry = read_from_stream(DicEntry, dic_f)
 		file_info_lookup[entry.filename_crc32] = entry
 		# if total_size != entry.total_size_sum:
 		# 	print("Total size doesnt match file size sums")
 		total_size = total_size + entry.file_size
 		total_size = (total_size + 3) & ~3
-	dic_f.read(4)
-	entry_count = struct.unpack('<I', dic_f.read(4)[:4])[0]
-	for i in range(entry_count):
-		entry_name = bytearray()
-		while True:
-			b = dic_f.read(1)
-			if b == b'\0':
-				break
-			entry_name += b
-		entry_name_crc32 = zlib.crc32(entry_name)
-		entry_name = entry_name.decode()
-		if adjust_names:
-			entry_name = ".".join(entry_name.replace("_ADRS", "").rsplit("_", 1))
-		file_info = file_info_lookup[entry_name_crc32]
-		srl_f.seek(file_info.rom_addr - 0x08000000)
-		with open(f"{args.out_folder}/{entry_name}", "wb") as out_f:
-			out_f.write(srl_f.read(file_info.file_size))
+		peekValue = dic_f.peek(4)[:4]
+		# Check if the end of the stream was reached
+		if peekValue == b'':
+			contains_names = False
+			break
+		# Check if this section is over
+		if struct.unpack('<I', peekValue)[0] == 0:
+			break
+	if contains_names:
+		dic_f.read(4)
+		entry_count = struct.unpack('<I', dic_f.read(4)[:4])[0]
+		for i in range(entry_count):
+			entry_name = bytearray()
+			while True:
+				b = dic_f.read(1)
+				if b == b'\0':
+					break
+				entry_name += b
+			entry_name_crc32 = zlib.crc32(entry_name)
+			entry_name = entry_name.decode()
+			if adjust_names:
+				entry_name = ".".join(entry_name.replace("_ADRS", "").rsplit("_", 1))
+			file_info = file_info_lookup[entry_name_crc32]
+			srl_f.seek(file_info.rom_addr - 0x08000000)
+			with open(f"{args.out_folder}/{entry_name}", "wb") as out_f:
+				out_f.write(srl_f.read(file_info.file_size))
+	else:
+		for fi in file_info_lookup.values():
+			srl_f.seek(fi.rom_addr - 0x08000000)
+			with open(f"{args.out_folder}/{fi.filename_crc32:08X}", "wb") as out_f:
+				out_f.write(srl_f.read(fi.file_size))
