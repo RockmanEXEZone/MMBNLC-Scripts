@@ -73,7 +73,9 @@ def LabelFunctions(labelingFunction):
 						continue
 					print(exe_string)
 					# Get the game name from the path
-					exe_string2 = exe_string.split("/")[3]
+					exe_string_split = exe_string.split("/")
+					exe_string2 = exe_string_split[3]
+					cpp_string = exe_string_split[-1].replace(".cpp", "")
 					# get the function name
 					func_name = op.getInput(3)
 					func_name_def = func_name.getDef()
@@ -87,7 +89,7 @@ def LabelFunctions(labelingFunction):
 						func_name_addr = toAddr(func_name_def.getInput(0).getOffset())
 					func_string = getString(func_name_addr)
 					# Combine the game name and function name
-					new_func_name = "{0}{1}".format(exe_string2, func_string)
+					new_func_name = "{0}_{1}{2}".format(exe_string2, cpp_string, func_string)
 					print(exe_string2)
 					print(func_string)
 					print(new_func_name)
