@@ -1,3 +1,15 @@
+# Generates a .bnk file for Mega Man Battle Network Legacy Collection Vol 1/2 from a list of .wem files
+#
+# Usage:
+#    python make_bnk.py [--header_file HEADER_FILE] [--exclude_bgm] wem_table bnk_file
+#
+# Example:
+#    python make_bnk.py wem_table.txt output_bnk.bnk
+#    Takes the list of wem files from wem_table.txt and generates a bnk file named output_bnk.bnk
+#    Each line in wem_table.txt is a tab separated entry in the format:
+#    [sound_type] [wem_path]
+#    sound type could either be SFX or BGM for which in game volume control this sound is controlled by.
+
 from argparse import ArgumentParser
 from dataclasses import dataclass
 import re
