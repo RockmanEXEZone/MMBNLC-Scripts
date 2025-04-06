@@ -4715,5 +4715,5 @@
 4714	4EDAC590	Wallpaper/Wallpaper_FrameDecided.png
 4715	56EC145D	Wallpaper/Wallpaper_Normal.png
 4716	A494394C	Wallpaper/Wallpaper_NormalDecided.png
-4717	FE5BA000	
-4718	0DDAD6CA	
+4717	FE5BA000	b_s.png
+4718	0DDAD6CA	t2_s.png

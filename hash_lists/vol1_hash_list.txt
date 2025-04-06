@@ -3029,5 +3029,5 @@
 3028	4EDAC590	Wallpaper/Wallpaper_FrameDecided.png
 3029	56EC145D	Wallpaper/Wallpaper_Normal.png
 3030	A494394C	Wallpaper/Wallpaper_NormalDecided.png
-3031	FE5BA000	
-3032	3C32CC57	
+3031	FE5BA000	b_s.png
+3032	3C32CC57	t1_s.png
