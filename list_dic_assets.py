@@ -1,10 +1,10 @@
 # Lists files listed in .dic files in a comma separated text format
 #
 # Usage:
-#    python extract_dic_assets.py <dic_file> <out_file>
+#    python list_dic_assets.py <dic_file> <out_file>
 #
 # Example:
-#    python extract_dic_assets.py rom.dic rom_dic.csv
+#    python list_dic_assets.py rom.dic rom_dic.csv
 #    Lists: the label crc32, rom address, file size, and label for all files in in rom.dic to a comma separated format
 
 from argparse import ArgumentParser
